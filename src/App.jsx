@@ -29,6 +29,8 @@ function App() {
   const [tasks, setTasks] = useState(sampleTasks);
   const [newTask, setNewTask] = useState("");
   const [message, setMessage] = useState("");
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editedTitle, setEditedTitle] = useState("");
 
   function handleAddTask(event) {
     event.preventDefault();
@@ -58,6 +60,32 @@ function App() {
         task.id === taskId ? { ...task, completed: !task.completed } : task,
       ),
     );
+  }
+  function handleStartEdit(task) {
+    setEditingTaskId(task.id);
+    setEditedTitle(task.title);
+  }
+
+  function handleSaveEdit(taskId) {
+    const updatedTitle = editedTitle.trim();
+
+    if (updatedTitle === "") {
+      return;
+    }
+
+    setTasks((previousTasks) =>
+      previousTasks.map((task) =>
+        task.id === taskId ? { ...task, title: updatedTitle } : task,
+      ),
+    );
+
+    setEditingTaskId(null);
+    setEditedTitle("");
+  }
+
+  function handleCancelEdit() {
+    setEditingTaskId(null);
+    setEditedTitle("");
   }
   return (
     <div className="app">
@@ -186,17 +214,55 @@ function App() {
                 </button>
 
                 <div className="task-details">
-                  <p className={task.completed ? "completed-text" : ""}>
-                    {task.title}
-                  </p>
-                  <span>{task.category}</span>
+                  {editingTaskId === task.id ? (
+                    <div className="edit-task-form">
+                      <input
+                        type="text"
+                        className="edit-task-input"
+                        value={editedTitle}
+                        onChange={(event) => setEditedTitle(event.target.value)}
+                        autoFocus
+                      />
+
+                      <button
+                        type="button"
+                        className="save-edit-button"
+                        onClick={() => handleSaveEdit(task.id)}
+                      >
+                        Save
+                      </button>
+
+                      <button
+                        type="button"
+                        className="cancel-edit-button"
+                        onClick={handleCancelEdit}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className={task.completed ? "completed-text" : ""}>
+                        {task.title}
+                      </p>
+                      <span>{task.category}</span>
+                    </>
+                  )}
                 </div>
 
                 <span className={`priority ${task.priority.toLowerCase()}`}>
                   {task.priority}
                 </span>
 
-                <div className="task-menu">•••</div>
+                {editingTaskId !== task.id && (
+                  <button
+                    type="button"
+                    className="edit-button"
+                    onClick={() => handleStartEdit(task)}
+                  >
+                    Edit
+                  </button>
+                )}
               </div>
             ))}
           </div>
