@@ -1,4 +1,4 @@
-# 🎙️ VoxTask – Voice-Powered Task Manager
+# VoxTask – Voice-Powered Task Manager
 
 VoxTask is a simple and modern task management web application that helps users organize their daily activities through both manual input and voice-to-text functionality.
 
@@ -6,13 +6,13 @@ Instead of typing every task, users can speak into the microphone, convert their
 
 Built using React and JavaScript, VoxTask focuses on making everyday task management easier and more convenient.
 
-## 🚀 Live Demo
+## Live Demo
 
 **Try VoxTask:** [https://vox-task.vercel.app/](https://vox-task.vercel.app/)
 
 **GitHub Repository:** [aaditya1606/VoxTask](https://github.com/aaditya1606/VoxTask)
 
-## ✨ Features
+## Features
 
 - **Voice-to-Text Input:** Convert spoken words into text using browser speech recognition.
 - **Manual Task Creation:** Add tasks by typing.
@@ -23,7 +23,7 @@ Built using React and JavaScript, VoxTask focuses on making everyday task manage
 - **LocalStorage Persistence:** Automatically save tasks in the browser so they remain available after refreshing.
 - **Responsive Design:** Clean interface designed for desktop and mobile screens.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Technology | Purpose |
 |---|---|
@@ -36,7 +36,7 @@ Built using React and JavaScript, VoxTask focuses on making everyday task manage
 | Git & GitHub | Version control and source code hosting |
 | Vercel | Application deployment |
 
-## 📂 Getting Started
+## Getting Started
 
 Follow these instructions to run VoxTask locally.
 
@@ -80,7 +80,7 @@ Visit the local URL displayed in your terminal, usually:
 http://localhost:5173/
 ```
 
-## 🎤 Using Voice Input
+## Using Voice Input
 
 1. Open VoxTask in a supported browser.
 2. Click the microphone button.
@@ -93,7 +93,7 @@ The current voice recognition language is Indian English (`en-IN`).
 
 Browser support for speech recognition varies. Some browsers use an online speech recognition service, so an internet connection may be required. Manual task entry remains available as a fallback.
 
-## 💾 Data Storage
+## Data Storage
 
 VoxTask uses browser LocalStorage to save tasks automatically.
 
@@ -106,7 +106,7 @@ This means:
 
 Clearing the browser's site data can remove locally stored tasks.
 
-## 📦 Production Build
+## Production Build
 
 To generate an optimized production build, run:
 
@@ -126,7 +126,7 @@ To check code quality using ESLint, run:
 npm run lint
 ```
 
-## 🗺️ Future Improvements
+## Future Improvements
 
 Some features planned for future versions include:
 
@@ -137,7 +137,7 @@ Some features planned for future versions include:
 - AI-powered task interpretation.
 - Improved productivity insights.
 
-## 👨‍💻 Developer
+## Developer
 
 **Aaditya Shakya**
 
@@ -146,6 +146,6 @@ GitHub: [@aaditya1606](https://github.com/aaditya1606)
 
 ---
 
-Built with curiosity, code and a little bit of voice. 💜
+Built with curiosity, code and a little bit of voice.
 
 **VoxTask – Say it. We'll save it.**
