@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
 // Initial sample tasks
@@ -32,7 +33,7 @@ function App() {
     try {
       const savedTasks = window.localStorage.getItem("voxtask_tasks");
 
-      if (savedTasks) {
+      if (savedTasks !== null) {
         const parsedTasks = JSON.parse(savedTasks);
 
         if (Array.isArray(parsedTasks)) {
@@ -46,6 +47,7 @@ function App() {
       return sampleTasks;
     }
   });
+
   const [newTask, setNewTask] = useState("");
   const [message, setMessage] = useState("");
 
@@ -56,13 +58,42 @@ function App() {
   // Filter-related state
   const [activeFilter, setActiveFilter] = useState("all");
 
+  // Voice recognition states
+  const [isListening, setIsListening] = useState(false);
+  const [voiceMessage, setVoiceMessage] = useState("");
+  const recognitionRef = useRef(null);
+
+  // Save tasks automatically in LocalStorage
   useEffect(() => {
     try {
-      window.localStorage.setItem("voxtask_tasks", JSON.stringify(tasks));
+      window.localStorage.setItem(
+        "voxtask_tasks",
+        JSON.stringify(tasks)
+      );
     } catch (error) {
       console.error("Error saving tasks:", error);
     }
   }, [tasks]);
+
+  // Clean up speech recognition when the component unmounts
+  useEffect(() => {
+    return () => {
+      const recognition = recognitionRef.current;
+
+      if (recognition) {
+        recognition.onend = null;
+        recognition.onerror = null;
+
+        try {
+          recognition.abort();
+        } catch (error) {
+          console.error("Speech cleanup error:", error);
+        }
+
+        recognitionRef.current = null;
+      }
+    };
+  }, []);
 
   // Add a new task
   function handleAddTask(event) {
@@ -87,6 +118,7 @@ function App() {
 
     setNewTask("");
     setMessage("");
+    setVoiceMessage("");
     setActiveFilter("all");
   }
 
@@ -94,15 +126,17 @@ function App() {
   function handleToggleTask(taskId) {
     setTasks((previousTasks) =>
       previousTasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task,
-      ),
+        task.id === taskId
+          ? { ...task, completed: !task.completed }
+          : task
+      )
     );
   }
 
   // Delete a task
   function handleDeleteTask(taskId) {
     setTasks((previousTasks) =>
-      previousTasks.filter((task) => task.id !== taskId),
+      previousTasks.filter((task) => task.id !== taskId)
     );
 
     if (editingTaskId === taskId) {
@@ -127,8 +161,10 @@ function App() {
 
     setTasks((previousTasks) =>
       previousTasks.map((task) =>
-        task.id === taskId ? { ...task, title: updatedTitle } : task,
-      ),
+        task.id === taskId
+          ? { ...task, title: updatedTitle }
+          : task
+      )
     );
 
     setEditingTaskId(null);
@@ -141,7 +177,180 @@ function App() {
     setEditedTitle("");
   }
 
-  // Filter tasks according to the selected category
+  // Voice-to-text functionality
+  function handleVoiceInput() {
+    // Stop recognition if it is already active
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+        setVoiceMessage("Stopping voice input...");
+      } catch (error) {
+        console.error("Error stopping recognition:", error);
+
+        recognitionRef.current = null;
+        setIsListening(false);
+        setVoiceMessage("Unable to stop microphone. Please try again.");
+      }
+
+      return;
+    }
+
+    // Check secure context
+    if (!window.isSecureContext) {
+      setVoiceMessage(
+        "Voice recognition requires HTTPS or localhost."
+      );
+      return;
+    }
+
+    // Check browser support
+    const SpeechRecognition =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setVoiceMessage(
+        "Speech recognition is not supported in this browser. Please use Chrome or Edge, or type your task manually."
+      );
+      return;
+    }
+
+    let recognition;
+
+    try {
+      // Create recognition instance
+      recognition = new SpeechRecognition();
+
+      recognitionRef.current = recognition;
+
+      // Recognition settings
+      recognition.lang = "en-IN";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      // When listening starts
+      recognition.onstart = () => {
+        setIsListening(true);
+        setVoiceMessage("Listening... Speak your task.");
+      };
+
+      // When speech is converted into text
+      recognition.onresult = (event) => {
+        const result =
+          event.results?.[event.resultIndex] ||
+          event.results?.[0];
+
+        const transcript =
+          result?.[0]?.transcript?.trim() || "";
+
+        if (!transcript) {
+          setVoiceMessage(
+            "No clear speech detected. Please try again."
+          );
+          return;
+        }
+
+        setNewTask((previousTask) => {
+          const existingText = previousTask.trim();
+
+          return existingText
+            ? `${existingText} ${transcript}`
+            : transcript;
+        });
+
+        setMessage("");
+
+        setVoiceMessage(
+          "Speech converted successfully! Review your task and click Add task."
+        );
+      };
+
+      // Handle recognition errors
+      recognition.onerror = (event) => {
+        const errorCode = event.error || "unknown";
+
+        console.error("Speech Recognition Error:", {
+          error: errorCode,
+          message: event.message,
+        });
+
+        const errorMessages = {
+          "not-allowed":
+            "Microphone permission denied. Allow microphone access in Chrome settings.",
+
+          "service-not-allowed":
+            "The browser has blocked its speech recognition service.",
+
+          "no-speech":
+            "No speech detected. Please try speaking again.",
+
+          "audio-capture":
+            "Microphone not found. Check your microphone connection.",
+
+          network:
+            "The browser could not reach its speech recognition service. Check your internet connection, VPN or firewall. You can still type your task manually.",
+
+          aborted:
+            "Voice recognition was interrupted. Please try again.",
+
+          "language-not-supported":
+            "The selected recognition language is not supported. Try en-IN or en-US."
+        };
+
+        setVoiceMessage(
+          errorMessages[errorCode] ||
+          `Speech recognition error: ${errorCode}`
+        );
+
+        setIsListening(false);
+        
+        if (recognitionRef.current === recognition) {
+          recognitionRef.current = null;
+        }
+      };
+
+      // When listening ends
+      recognition.onend = () => {
+        setIsListening(false);
+
+        if (recognitionRef.current === recognition) {
+          recognitionRef.current = null;
+        }
+      };
+
+      // Start recognition
+      setVoiceMessage("Starting microphone...");
+
+      recognition.start();
+
+    } catch (error) {
+      // Correctly handle synchronous JavaScript/API errors
+      console.error("Unable to start Speech Recognition:", error);
+
+      if (recognitionRef.current === recognition) {
+        recognitionRef.current = null;
+      }
+
+      setIsListening(false);
+
+      if (error.name === "NotAllowedError") {
+        setVoiceMessage(
+          "Microphone permission was denied. Allow access in browser settings."
+        );
+      } else if (error.name === "InvalidStateError") {
+        setVoiceMessage(
+          "Microphone is already active. Please try again."
+        );
+      } else {
+        setVoiceMessage(
+          `Unable to start microphone: ${error.message || error.name || "Unknown error"}`
+        );
+      }
+    }
+  }
+
+  // Filter tasks according to selected category
   const filteredTasks = tasks.filter((task) => {
     switch (activeFilter) {
       case "pending":
@@ -175,6 +384,7 @@ function App() {
 
   return (
     <div className="app">
+
       {/* Navigation */}
       <header className="topbar">
         <div className="brand">
@@ -196,6 +406,7 @@ function App() {
       </header>
 
       <main className="container">
+
         {/* Welcome section */}
         <section className="welcome">
           <div>
@@ -203,7 +414,9 @@ function App() {
 
             <h1>Make space for what matters.</h1>
 
-            <p className="subtitle">Organize your day, one task at a time.</p>
+            <p className="subtitle">
+              Organize your day, one task at a time.
+            </p>
           </div>
 
           <div className="date-label">
@@ -219,12 +432,25 @@ function App() {
             <h2>Say it. We'll save it.</h2>
 
             <p>
-              Capture your thoughts and turn them into tasks using your voice.
+              Capture your thoughts and turn them into tasks
+              using your voice.
             </p>
           </div>
 
           <div className="voice-action">
-            <div className="mic-button">
+            <button
+              type="button"
+              className={`mic-button ${
+                isListening ? "listening" : ""
+              }`}
+              onClick={handleVoiceInput}
+              aria-label={
+                isListening
+                  ? "Stop voice input"
+                  : "Start voice input"
+              }
+              aria-pressed={isListening}
+            >
               <svg
                 viewBox="0 0 24 24"
                 width="29"
@@ -235,20 +461,41 @@ function App() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <rect x="9" y="2" width="6" height="13" rx="3" />
+                <rect
+                  x="9"
+                  y="2"
+                  width="6"
+                  height="13"
+                  rx="3"
+                />
+
                 <path d="M5 10a7 7 0 0 0 14 0" />
                 <path d="M12 17v5" />
                 <path d="M8 22h8" />
               </svg>
-            </div>
+            </button>
 
-            <span>Tap to start speaking</span>
+            <span>
+              {isListening
+                ? "Listening... Tap to stop"
+                : "Tap to start speaking"}
+            </span>
           </div>
         </section>
 
+        {/* Voice feedback */}
+        {voiceMessage && (
+          <p className="voice-message" role="status">
+            {voiceMessage}
+          </p>
+        )}
+
         {/* Manual task input */}
         <div className="task-entry">
-          <form className="add-task" onSubmit={handleAddTask}>
+          <form
+            className="add-task"
+            onSubmit={handleAddTask}
+          >
             <div className="input-icon">+</div>
 
             <input
@@ -259,24 +506,35 @@ function App() {
               onChange={(event) => {
                 setNewTask(event.target.value);
                 setMessage("");
+                setVoiceMessage("");
               }}
             />
 
-            <button type="submit" className="add-button">
+            <button
+              type="submit"
+              className="add-button"
+            >
               Add task
             </button>
           </form>
 
-          {message && <p className="input-message">{message}</p>}
+          {message && (
+            <p className="input-message">
+              {message}
+            </p>
+          )}
         </div>
 
         {/* Task list section */}
         <section className="tasks-section">
+
           <div className="section-heading">
             <div>
               <h2>Your tasks</h2>
 
-              <p>Keep track of the things that matter.</p>
+              <p>
+                Keep track of the things that matter.
+              </p>
             </div>
 
             <span className="task-count">
@@ -289,7 +547,9 @@ function App() {
           <div className="filters">
             <button
               type="button"
-              className={`filter ${activeFilter === "all" ? "active" : ""}`}
+              className={`filter ${
+                activeFilter === "all" ? "active" : ""
+              }`}
               onClick={() => setActiveFilter("all")}
               aria-pressed={activeFilter === "all"}
             >
@@ -298,7 +558,9 @@ function App() {
 
             <button
               type="button"
-              className={`filter ${activeFilter === "pending" ? "active" : ""}`}
+              className={`filter ${
+                activeFilter === "pending" ? "active" : ""
+              }`}
               onClick={() => setActiveFilter("pending")}
               aria-pressed={activeFilter === "pending"}
             >
@@ -320,10 +582,16 @@ function App() {
           {/* Task cards */}
           <div className="task-list">
             {filteredTasks.length === 0 ? (
-              <p className="empty-state">{getEmptyMessage()}</p>
+              <p className="empty-state">
+                {getEmptyMessage()}
+              </p>
             ) : (
               filteredTasks.map((task) => (
-                <div className="task-item" key={task.id}>
+                <div
+                  className="task-item"
+                  key={task.id}
+                >
+
                   {/* Completion checkbox */}
                   <button
                     type="button"
@@ -357,7 +625,9 @@ function App() {
                         <button
                           type="button"
                           className="save-edit-button"
-                          onClick={() => handleSaveEdit(task.id)}
+                          onClick={() =>
+                            handleSaveEdit(task.id)
+                          }
                         >
                           Save
                         </button>
@@ -372,7 +642,13 @@ function App() {
                       </div>
                     ) : (
                       <>
-                        <p className={task.completed ? "completed-text" : ""}>
+                        <p
+                          className={
+                            task.completed
+                              ? "completed-text"
+                              : ""
+                          }
+                        >
                           {task.title}
                         </p>
 
@@ -382,7 +658,9 @@ function App() {
                   </div>
 
                   {/* Priority */}
-                  <span className={`priority ${task.priority.toLowerCase()}`}>
+                  <span
+                    className={`priority ${task.priority.toLowerCase()}`}
+                  >
                     {task.priority}
                   </span>
 
@@ -392,7 +670,9 @@ function App() {
                       <button
                         type="button"
                         className="edit-button"
-                        onClick={() => handleStartEdit(task)}
+                        onClick={() =>
+                          handleStartEdit(task)
+                        }
                         aria-label={`Edit ${task.title}`}
                       >
                         Edit
@@ -401,7 +681,9 @@ function App() {
                       <button
                         type="button"
                         className="delete-button"
-                        onClick={() => handleDeleteTask(task.id)}
+                        onClick={() =>
+                          handleDeleteTask(task.id)
+                        }
                         aria-label={`Delete ${task.title}`}
                       >
                         Delete
@@ -416,10 +698,13 @@ function App() {
 
         {/* Footer */}
         <footer className="footer">
-          <p>A little progress every day adds up.</p>
+          <p>
+            A little progress every day adds up.
+          </p>
 
           <span>Made with focus by VoxTask</span>
         </footer>
+
       </main>
     </div>
   );
