@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 // Initial sample tasks
@@ -28,7 +28,24 @@ const sampleTasks = [
 
 function App() {
   // Task-related states
-  const [tasks, setTasks] = useState(sampleTasks);
+  const [tasks, setTasks] = useState(() => {
+    try {
+      const savedTasks = window.localStorage.getItem("voxtask_tasks");
+
+      if (savedTasks) {
+        const parsedTasks = JSON.parse(savedTasks);
+
+        if (Array.isArray(parsedTasks)) {
+          return parsedTasks;
+        }
+      }
+
+      return sampleTasks;
+    } catch (error) {
+      console.error("Error loading tasks:", error);
+      return sampleTasks;
+    }
+  });
   const [newTask, setNewTask] = useState("");
   const [message, setMessage] = useState("");
 
@@ -38,6 +55,14 @@ function App() {
 
   // Filter-related state
   const [activeFilter, setActiveFilter] = useState("all");
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("voxtask_tasks", JSON.stringify(tasks));
+    } catch (error) {
+      console.error("Error saving tasks:", error);
+    }
+  }, [tasks]);
 
   // Add a new task
   function handleAddTask(event) {
