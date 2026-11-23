@@ -583,3 +583,37 @@
   outline: 2px solid #7855dc;
   outline-offset: 3px;
 }
+
+
+
+/* Interactive microphone button */
+.mic-button {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.mic-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 18px rgba(120, 85, 220, 0.3);
+}
+
+.mic-button.listening {
+  background: #b85c78;
+  box-shadow: 0 0 0 5px #f8e8ee;
+}
+
+.mic-button:focus-visible {
+  outline: 2px solid #7855dc;
+  outline-offset: 4px;
+}
+
+/* Voice recognition feedback */
+.voice-message {
+  margin: 12px 0 0;
+  color: #7855dc;
+  font-size: 12px;
+  line-height: 1.6;
+}
