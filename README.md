@@ -6,6 +6,12 @@ Instead of typing every task, users can speak into the microphone, convert their
 
 Built using React and JavaScript, VoxTask focuses on making everyday task management easier and more convenient.
 
+## 🚀 Live Demo
+
+**Try VoxTask:** [https://vox-task.vercel.app/](https://vox-task.vercel.app/)
+
+**GitHub Repository:** [aaditya1606/VoxTask](https://github.com/aaditya1606/VoxTask)
+
 ## ✨ Features
 
 - **Voice-to-Text Input:** Convert spoken words into text using browser speech recognition.
@@ -27,9 +33,10 @@ Built using React and JavaScript, VoxTask focuses on making everyday task manage
 | CSS | Styling and responsive design |
 | Web Speech API | Speech recognition |
 | LocalStorage | Saving tasks in the browser |
-| Git & GitHub | Version control and project hosting |
+| Git & GitHub | Version control and source code hosting |
+| Vercel | Application deployment |
 
-## 🚀 Getting Started
+## 📂 Getting Started
 
 Follow these instructions to run VoxTask locally.
 
@@ -91,6 +98,7 @@ Browser support for speech recognition varies. Some browsers use an online speec
 VoxTask uses browser LocalStorage to save tasks automatically.
 
 This means:
+
 - Tasks remain available after refreshing the page.
 - Changes to tasks are saved automatically.
 - Data is stored locally in the browser.
