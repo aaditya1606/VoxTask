@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "./App.css";
 
+// Initial sample tasks
 const sampleTasks = [
   {
     id: 1,
@@ -26,12 +27,19 @@ const sampleTasks = [
 ];
 
 function App() {
+  // Task-related states
   const [tasks, setTasks] = useState(sampleTasks);
   const [newTask, setNewTask] = useState("");
   const [message, setMessage] = useState("");
+
+  // Editing-related states
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editedTitle, setEditedTitle] = useState("");
 
+  // Filter-related state
+  const [activeFilter, setActiveFilter] = useState("all");
+
+  // Add a new task
   function handleAddTask(event) {
     event.preventDefault();
 
@@ -51,9 +59,13 @@ function App() {
     };
 
     setTasks((previousTasks) => [task, ...previousTasks]);
+
     setNewTask("");
     setMessage("");
+    setActiveFilter("all");
   }
+
+  // Mark a task as completed or pending
   function handleToggleTask(taskId) {
     setTasks((previousTasks) =>
       previousTasks.map((task) =>
@@ -61,16 +73,26 @@ function App() {
       ),
     );
   }
+
+  // Delete a task
   function handleDeleteTask(taskId) {
     setTasks((previousTasks) =>
       previousTasks.filter((task) => task.id !== taskId),
     );
+
+    if (editingTaskId === taskId) {
+      setEditingTaskId(null);
+      setEditedTitle("");
+    }
   }
+
+  // Start editing a task
   function handleStartEdit(task) {
     setEditingTaskId(task.id);
     setEditedTitle(task.title);
   }
 
+  // Save edited task
   function handleSaveEdit(taskId) {
     const updatedTitle = editedTitle.trim();
 
@@ -88,10 +110,44 @@ function App() {
     setEditedTitle("");
   }
 
+  // Cancel editing
   function handleCancelEdit() {
     setEditingTaskId(null);
     setEditedTitle("");
   }
+
+  // Filter tasks according to the selected category
+  const filteredTasks = tasks.filter((task) => {
+    switch (activeFilter) {
+      case "pending":
+        return task.completed === false;
+
+      case "completed":
+        return task.completed === true;
+
+      case "all":
+      default:
+        return true;
+    }
+  });
+
+  // Dynamic empty-state message
+  function getEmptyMessage() {
+    if (tasks.length === 0) {
+      return "No tasks available. Add a new task to get started!";
+    }
+
+    if (activeFilter === "pending") {
+      return "No pending tasks available!";
+    }
+
+    if (activeFilter === "completed") {
+      return "No completed tasks available!";
+    }
+
+    return "No tasks available.";
+  }
+
   return (
     <div className="app">
       {/* Navigation */}
@@ -104,6 +160,7 @@ function App() {
             <span></span>
             <span></span>
           </div>
+
           <h2>VoxTask</h2>
         </div>
 
@@ -118,7 +175,9 @@ function App() {
         <section className="welcome">
           <div>
             <p className="eyebrow">YOUR PERSONAL TASK SPACE</p>
+
             <h1>Make space for what matters.</h1>
+
             <p className="subtitle">Organize your day, one task at a time.</p>
           </div>
 
@@ -131,7 +190,9 @@ function App() {
         <section className="voice-card">
           <div className="voice-content">
             <p className="eyebrow">VOICE ASSISTANT</p>
+
             <h2>Say it. We'll save it.</h2>
+
             <p>
               Capture your thoughts and turn them into tasks using your voice.
             </p>
@@ -155,6 +216,7 @@ function App() {
                 <path d="M8 22h8" />
               </svg>
             </div>
+
             <span>Tap to start speaking</span>
           </div>
         </section>
@@ -183,44 +245,71 @@ function App() {
           {message && <p className="input-message">{message}</p>}
         </div>
 
-        {/* Task list */}
+        {/* Task list section */}
         <section className="tasks-section">
           <div className="section-heading">
             <div>
               <h2>Your tasks</h2>
+
               <p>Keep track of the things that matter.</p>
             </div>
 
             <span className="task-count">
-              {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
+              {filteredTasks.length}{" "}
+              {filteredTasks.length === 1 ? "task" : "tasks"}
             </span>
           </div>
 
           {/* Task filters */}
           <div className="filters">
-            <span className="filter active">All tasks</span>
-            <span className="filter">Pending</span>
-            <span className="filter">Completed</span>
+            <button
+              type="button"
+              className={`filter ${activeFilter === "all" ? "active" : ""}`}
+              onClick={() => setActiveFilter("all")}
+              aria-pressed={activeFilter === "all"}
+            >
+              All tasks
+            </button>
+
+            <button
+              type="button"
+              className={`filter ${activeFilter === "pending" ? "active" : ""}`}
+              onClick={() => setActiveFilter("pending")}
+              aria-pressed={activeFilter === "pending"}
+            >
+              Pending
+            </button>
+
+            <button
+              type="button"
+              className={`filter ${
+                activeFilter === "completed" ? "active" : ""
+              }`}
+              onClick={() => setActiveFilter("completed")}
+              aria-pressed={activeFilter === "completed"}
+            >
+              Completed
+            </button>
           </div>
 
           {/* Task cards */}
-
-          {/* Task cards */}
           <div className="task-list">
-            {tasks.length === 0 ? (
-              <p className="empty-state">
-                No tasks available. Add a new task to get started!
-              </p>
+            {filteredTasks.length === 0 ? (
+              <p className="empty-state">{getEmptyMessage()}</p>
             ) : (
-              tasks.map((task) => (
+              filteredTasks.map((task) => (
                 <div className="task-item" key={task.id}>
                   {/* Completion checkbox */}
                   <button
                     type="button"
-                    className={`task-checkbox ${task.completed ? "checked" : ""}`}
+                    className={`task-checkbox ${
+                      task.completed ? "checked" : ""
+                    }`}
                     onClick={() => handleToggleTask(task.id)}
                     aria-label={
-                      task.completed ? "Mark as pending" : "Mark as completed"
+                      task.completed
+                        ? `Mark ${task.title} as pending`
+                        : `Mark ${task.title} as completed`
                     }
                   >
                     {task.completed ? "✓" : ""}
@@ -261,6 +350,7 @@ function App() {
                         <p className={task.completed ? "completed-text" : ""}>
                           {task.title}
                         </p>
+
                         <span>{task.category}</span>
                       </>
                     )}
@@ -278,6 +368,7 @@ function App() {
                         type="button"
                         className="edit-button"
                         onClick={() => handleStartEdit(task)}
+                        aria-label={`Edit ${task.title}`}
                       >
                         Edit
                       </button>
@@ -286,6 +377,7 @@ function App() {
                         type="button"
                         className="delete-button"
                         onClick={() => handleDeleteTask(task.id)}
+                        aria-label={`Delete ${task.title}`}
                       >
                         Delete
                       </button>
@@ -297,8 +389,10 @@ function App() {
           </div>
         </section>
 
+        {/* Footer */}
         <footer className="footer">
           <p>A little progress every day adds up.</p>
+
           <span>Made with focus by VoxTask</span>
         </footer>
       </main>

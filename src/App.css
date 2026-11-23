@@ -227,6 +227,7 @@
   font-size: 12px;
 }
 
+
 .filters {
   display: flex;
   gap: 26px;
@@ -235,9 +236,19 @@
 }
 
 .filter {
-  padding-bottom: 13px;
+  padding: 0 0 13px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-family: inherit;
   font-size: 12px;
   color: #9690a0;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.filter:hover {
+  color: #7553d1;
 }
 
 .filter.active {
