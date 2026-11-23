@@ -50,7 +50,7 @@ function App() {
       completed: false,
     };
 
-    setTasks([task, ...tasks]);
+    setTasks((previousTasks) => [task, ...previousTasks]);
     setNewTask("");
     setMessage("");
   }
@@ -59,6 +59,11 @@ function App() {
       previousTasks.map((task) =>
         task.id === taskId ? { ...task, completed: !task.completed } : task,
       ),
+    );
+  }
+  function handleDeleteTask(taskId) {
+    setTasks((previousTasks) =>
+      previousTasks.filter((task) => task.id !== taskId),
     );
   }
   function handleStartEdit(task) {
@@ -199,72 +204,96 @@ function App() {
           </div>
 
           {/* Task cards */}
+
+          {/* Task cards */}
           <div className="task-list">
-            {tasks.map((task) => (
-              <div className="task-item" key={task.id}>
-                <button
-                  type="button"
-                  className={`task-checkbox ${task.completed ? "checked" : ""}`}
-                  onClick={() => handleToggleTask(task.id)}
-                  aria-label={
-                    task.completed ? "Mark as pending" : "Mark as completed"
-                  }
-                >
-                  {task.completed ? "✓" : ""}
-                </button>
-
-                <div className="task-details">
-                  {editingTaskId === task.id ? (
-                    <div className="edit-task-form">
-                      <input
-                        type="text"
-                        className="edit-task-input"
-                        value={editedTitle}
-                        onChange={(event) => setEditedTitle(event.target.value)}
-                        autoFocus
-                      />
-
-                      <button
-                        type="button"
-                        className="save-edit-button"
-                        onClick={() => handleSaveEdit(task.id)}
-                      >
-                        Save
-                      </button>
-
-                      <button
-                        type="button"
-                        className="cancel-edit-button"
-                        onClick={handleCancelEdit}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <p className={task.completed ? "completed-text" : ""}>
-                        {task.title}
-                      </p>
-                      <span>{task.category}</span>
-                    </>
-                  )}
-                </div>
-
-                <span className={`priority ${task.priority.toLowerCase()}`}>
-                  {task.priority}
-                </span>
-
-                {editingTaskId !== task.id && (
+            {tasks.length === 0 ? (
+              <p className="empty-state">
+                No tasks available. Add a new task to get started!
+              </p>
+            ) : (
+              tasks.map((task) => (
+                <div className="task-item" key={task.id}>
+                  {/* Completion checkbox */}
                   <button
                     type="button"
-                    className="edit-button"
-                    onClick={() => handleStartEdit(task)}
+                    className={`task-checkbox ${task.completed ? "checked" : ""}`}
+                    onClick={() => handleToggleTask(task.id)}
+                    aria-label={
+                      task.completed ? "Mark as pending" : "Mark as completed"
+                    }
                   >
-                    Edit
+                    {task.completed ? "✓" : ""}
                   </button>
-                )}
-              </div>
-            ))}
+
+                  {/* Task details and editing */}
+                  <div className="task-details">
+                    {editingTaskId === task.id ? (
+                      <div className="edit-task-form">
+                        <input
+                          type="text"
+                          className="edit-task-input"
+                          value={editedTitle}
+                          onChange={(event) =>
+                            setEditedTitle(event.target.value)
+                          }
+                          autoFocus
+                        />
+
+                        <button
+                          type="button"
+                          className="save-edit-button"
+                          onClick={() => handleSaveEdit(task.id)}
+                        >
+                          Save
+                        </button>
+
+                        <button
+                          type="button"
+                          className="cancel-edit-button"
+                          onClick={handleCancelEdit}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <p className={task.completed ? "completed-text" : ""}>
+                          {task.title}
+                        </p>
+                        <span>{task.category}</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Priority */}
+                  <span className={`priority ${task.priority.toLowerCase()}`}>
+                    {task.priority}
+                  </span>
+
+                  {/* Edit and Delete buttons */}
+                  {editingTaskId !== task.id && (
+                    <div className="task-actions">
+                      <button
+                        type="button"
+                        className="edit-button"
+                        onClick={() => handleStartEdit(task)}
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        className="delete-button"
+                        onClick={() => handleDeleteTask(task.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </section>
 

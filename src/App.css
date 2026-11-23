@@ -478,3 +478,97 @@
   background: #f0eef4;
   color: #777285;
 }
+.empty-state {
+  text-align: center;
+  color: #9993a4;
+  background: #ffffff;
+  border: 1px dashed #ddd6e9;
+  border-radius: 11px;
+  padding: 30px 15px;
+  font-size: 13px;
+}
+
+/* Task action buttons */
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+/* Edit button */
+.edit-button {
+  background: #f0ebfb;
+  color: #7452ce;
+  border: 1px solid #e5dcfa;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-button:hover {
+  background: #e4dbfa;
+  transform: translateY(-1px);
+}
+
+/* Delete button */
+.delete-button {
+  background: #fff5f5;
+  color: #c65d70;
+  border: 1px solid #f6dfe3;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-button:hover {
+  background: #ffe8eb;
+  border-color: #f2cbd2;
+  transform: translateY(-1px);
+}
+
+/* Save button */
+.save-edit-button {
+  background: #7855dc;
+  color: white;
+  border: none;
+  padding: 8px 13px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.save-edit-button:hover {
+  background: #6241c0;
+}
+
+/* Cancel button */
+.cancel-edit-button {
+  background: #f3f1f6;
+  color: #777285;
+  border: 1px solid #e8e4ed;
+  padding: 8px 13px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.cancel-edit-button:hover {
+  background: #e9e6ef;
+}
+
+/* Keyboard accessibility */
+.task-actions button:focus-visible,
+.edit-task-form button:focus-visible {
+  outline: 2px solid #7855dc;
+  outline-offset: 3px;
+}
