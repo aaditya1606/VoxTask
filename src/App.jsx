@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
@@ -26,6 +25,87 @@ const sampleTasks = [
     completed: true,
   },
 ];
+
+// Detect the intention behind a voice command
+function detectVoiceCommand(transcript) {
+  const text = transcript
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[.!?]+$/, "");
+
+  // 1. Detect task-filter commands
+  const filterMatch = text.match(
+    /^(?:please\s+)?(?:show|display|view|list)(?:\s+me)?\s+(?:my\s+)?(all|pending|completed)(?:\s+tasks?)?$/i,
+  );
+
+  if (filterMatch) {
+    return {
+      intent: "show_tasks",
+      filter: filterMatch[1].toLowerCase(),
+    };
+  }
+
+  // 2. Detect task creation commands
+  const addMatch = text.match(
+    /^(?:please\s+)?(?:add|create)\s+(?:a\s+)?(?:new\s+)?task(?:\s+(?:to|called|named))?\s*[:,-]?\s*(.*)$/i,
+  );
+
+  if (addMatch) {
+    const taskTitle = addMatch[1].trim();
+
+    if (!taskTitle) {
+      return {
+        intent: "add_task_missing_title",
+      };
+    }
+
+    return {
+      intent: "add_task",
+      taskTitle: taskTitle,
+    };
+  }
+
+  // 3. Detect task-completion commands
+  const markMatch = text.match(
+    /^(?:please\s+)?(?:mark|set)\s+(?:the\s+)?(.+?)\s+(?:as\s+)?(?:completed|complete|done)$/i,
+  );
+
+  if (markMatch) {
+    return {
+      intent: "complete_task",
+      taskTitle: markMatch[1].trim(),
+    };
+  }
+
+  const completeMatch = text.match(
+    /^(?:please\s+)?(?:complete|finish)\s+(?:the\s+)?(?:task\s+)?(.+)$/i,
+  );
+
+  if (completeMatch) {
+    return {
+      intent: "complete_task",
+      taskTitle: completeMatch[1].trim(),
+    };
+  }
+
+  // 4. Detect task-deletion commands
+  const deleteMatch = text.match(
+    /^(?:please\s+)?(?:delete|remove)\s+(?:(?:the|my)\s+)?(?:task\s+)?(.+)$/i,
+  );
+
+  if (deleteMatch) {
+    return {
+      intent: "delete_task",
+      taskTitle: deleteMatch[1].trim(),
+    };
+  }
+
+  // 5. Unknown command
+  return {
+    intent: "unknown",
+    originalText: text,
+  };
+}
 
 function App() {
   // Task-related states
@@ -66,10 +146,7 @@ function App() {
   // Save tasks automatically in LocalStorage
   useEffect(() => {
     try {
-      window.localStorage.setItem(
-        "voxtask_tasks",
-        JSON.stringify(tasks)
-      );
+      window.localStorage.setItem("voxtask_tasks", JSON.stringify(tasks));
     } catch (error) {
       console.error("Error saving tasks:", error);
     }
@@ -121,22 +198,44 @@ function App() {
     setVoiceMessage("");
     setActiveFilter("all");
   }
+  // Add task directly through voice command
+  function handleVoiceAddTask(taskTitle) {
+    const title = taskTitle.trim();
 
+    if (!title) {
+      setVoiceMessage("Please provide a task title.");
+      return;
+    }
+
+    const task = {
+      id: Date.now(),
+      title: title,
+      category: "General",
+      priority: "Medium",
+      completed: false,
+    };
+
+    setTasks((previousTasks) => [task, ...previousTasks]);
+
+    setNewTask("");
+    setMessage("");
+    setActiveFilter("all");
+
+    setVoiceMessage(`Task added successfully: ${title}`);
+  }
   // Mark a task as completed or pending
   function handleToggleTask(taskId) {
     setTasks((previousTasks) =>
       previousTasks.map((task) =>
-        task.id === taskId
-          ? { ...task, completed: !task.completed }
-          : task
-      )
+        task.id === taskId ? { ...task, completed: !task.completed } : task,
+      ),
     );
   }
 
   // Delete a task
   function handleDeleteTask(taskId) {
     setTasks((previousTasks) =>
-      previousTasks.filter((task) => task.id !== taskId)
+      previousTasks.filter((task) => task.id !== taskId),
     );
 
     if (editingTaskId === taskId) {
@@ -161,10 +260,8 @@ function App() {
 
     setTasks((previousTasks) =>
       previousTasks.map((task) =>
-        task.id === taskId
-          ? { ...task, title: updatedTitle }
-          : task
-      )
+        task.id === taskId ? { ...task, title: updatedTitle } : task,
+      ),
     );
 
     setEditingTaskId(null);
@@ -197,20 +294,17 @@ function App() {
 
     // Check secure context
     if (!window.isSecureContext) {
-      setVoiceMessage(
-        "Voice recognition requires HTTPS or localhost."
-      );
+      setVoiceMessage("Voice recognition requires HTTPS or localhost.");
       return;
     }
 
     // Check browser support
     const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       setVoiceMessage(
-        "Speech recognition is not supported in this browser. Please use Chrome or Edge, or type your task manually."
+        "Speech recognition is not supported in this browser. Please use Chrome or Edge, or type your task manually.",
       );
       return;
     }
@@ -236,34 +330,62 @@ function App() {
       };
 
       // When speech is converted into text
-      recognition.onresult = (event) => {
-        const result =
-          event.results?.[event.resultIndex] ||
-          event.results?.[0];
 
-        const transcript =
-          result?.[0]?.transcript?.trim() || "";
+      recognition.onresult = (event) => {
+        const result = event.results?.[event.resultIndex] || event.results?.[0];
+
+        const transcript = result?.[0]?.transcript?.trim() || "";
 
         if (!transcript) {
-          setVoiceMessage(
-            "No clear speech detected. Please try again."
-          );
+          setVoiceMessage("No clear speech detected. Please try again.");
           return;
         }
 
-        setNewTask((previousTask) => {
-          const existingText = previousTask.trim();
+        // Detect the user's intention
+        const command = detectVoiceCommand(transcript);
 
-          return existingText
-            ? `${existingText} ${transcript}`
-            : transcript;
-        });
+        // Display results in browser console
+        console.log("Recognized Speech:", transcript);
+        console.log("Detected Command:", command);
 
         setMessage("");
 
-        setVoiceMessage(
-          "Speech converted successfully! Review your task and click Add task."
-        );
+        // Handle the detected intent for now
+        switch (command.intent) {
+          case "add_task":
+            handleVoiceAddTask(command.taskTitle);
+            break;
+
+          case "add_task_missing_title":
+            setVoiceMessage(
+              "Add-task command detected, but the task title is missing.",
+            );
+            break;
+
+          case "complete_task":
+            setVoiceMessage(
+              `Complete task detected: "${command.taskTitle}". Action not executed yet.`,
+            );
+            break;
+
+          case "delete_task":
+            setVoiceMessage(
+              `Delete task detected: "${command.taskTitle}". Action not executed yet.`,
+            );
+            break;
+
+          case "show_tasks":
+            setVoiceMessage(
+              `Show ${command.filter} tasks command detected. Action not executed yet.`,
+            );
+            break;
+
+          default:
+            setNewTask(transcript);
+            setVoiceMessage(
+              "No supported command detected. You can still add this text manually.",
+            );
+        }
       };
 
       // Handle recognition errors
@@ -282,8 +404,7 @@ function App() {
           "service-not-allowed":
             "The browser has blocked its speech recognition service.",
 
-          "no-speech":
-            "No speech detected. Please try speaking again.",
+          "no-speech": "No speech detected. Please try speaking again.",
 
           "audio-capture":
             "Microphone not found. Check your microphone connection.",
@@ -291,20 +412,18 @@ function App() {
           network:
             "The browser could not reach its speech recognition service. Check your internet connection, VPN or firewall. You can still type your task manually.",
 
-          aborted:
-            "Voice recognition was interrupted. Please try again.",
+          aborted: "Voice recognition was interrupted. Please try again.",
 
           "language-not-supported":
-            "The selected recognition language is not supported. Try en-IN or en-US."
+            "The selected recognition language is not supported. Try en-IN or en-US.",
         };
 
         setVoiceMessage(
-          errorMessages[errorCode] ||
-          `Speech recognition error: ${errorCode}`
+          errorMessages[errorCode] || `Speech recognition error: ${errorCode}`,
         );
 
         setIsListening(false);
-        
+
         if (recognitionRef.current === recognition) {
           recognitionRef.current = null;
         }
@@ -323,7 +442,6 @@ function App() {
       setVoiceMessage("Starting microphone...");
 
       recognition.start();
-
     } catch (error) {
       // Correctly handle synchronous JavaScript/API errors
       console.error("Unable to start Speech Recognition:", error);
@@ -336,15 +454,13 @@ function App() {
 
       if (error.name === "NotAllowedError") {
         setVoiceMessage(
-          "Microphone permission was denied. Allow access in browser settings."
+          "Microphone permission was denied. Allow access in browser settings.",
         );
       } else if (error.name === "InvalidStateError") {
-        setVoiceMessage(
-          "Microphone is already active. Please try again."
-        );
+        setVoiceMessage("Microphone is already active. Please try again.");
       } else {
         setVoiceMessage(
-          `Unable to start microphone: ${error.message || error.name || "Unknown error"}`
+          `Unable to start microphone: ${error.message || error.name || "Unknown error"}`,
         );
       }
     }
@@ -384,7 +500,6 @@ function App() {
 
   return (
     <div className="app">
-
       {/* Navigation */}
       <header className="topbar">
         <div className="brand">
@@ -406,7 +521,6 @@ function App() {
       </header>
 
       <main className="container">
-
         {/* Welcome section */}
         <section className="welcome">
           <div>
@@ -414,9 +528,7 @@ function App() {
 
             <h1>Make space for what matters.</h1>
 
-            <p className="subtitle">
-              Organize your day, one task at a time.
-            </p>
+            <p className="subtitle">Organize your day, one task at a time.</p>
           </div>
 
           <div className="date-label">
@@ -432,22 +544,17 @@ function App() {
             <h2>Say it. We'll save it.</h2>
 
             <p>
-              Capture your thoughts and turn them into tasks
-              using your voice.
+              Capture your thoughts and turn them into tasks using your voice.
             </p>
           </div>
 
           <div className="voice-action">
             <button
               type="button"
-              className={`mic-button ${
-                isListening ? "listening" : ""
-              }`}
+              className={`mic-button ${isListening ? "listening" : ""}`}
               onClick={handleVoiceInput}
               aria-label={
-                isListening
-                  ? "Stop voice input"
-                  : "Start voice input"
+                isListening ? "Stop voice input" : "Start voice input"
               }
               aria-pressed={isListening}
             >
@@ -461,13 +568,7 @@ function App() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <rect
-                  x="9"
-                  y="2"
-                  width="6"
-                  height="13"
-                  rx="3"
-                />
+                <rect x="9" y="2" width="6" height="13" rx="3" />
 
                 <path d="M5 10a7 7 0 0 0 14 0" />
                 <path d="M12 17v5" />
@@ -492,10 +593,7 @@ function App() {
 
         {/* Manual task input */}
         <div className="task-entry">
-          <form
-            className="add-task"
-            onSubmit={handleAddTask}
-          >
+          <form className="add-task" onSubmit={handleAddTask}>
             <div className="input-icon">+</div>
 
             <input
@@ -510,31 +608,21 @@ function App() {
               }}
             />
 
-            <button
-              type="submit"
-              className="add-button"
-            >
+            <button type="submit" className="add-button">
               Add task
             </button>
           </form>
 
-          {message && (
-            <p className="input-message">
-              {message}
-            </p>
-          )}
+          {message && <p className="input-message">{message}</p>}
         </div>
 
         {/* Task list section */}
         <section className="tasks-section">
-
           <div className="section-heading">
             <div>
               <h2>Your tasks</h2>
 
-              <p>
-                Keep track of the things that matter.
-              </p>
+              <p>Keep track of the things that matter.</p>
             </div>
 
             <span className="task-count">
@@ -547,9 +635,7 @@ function App() {
           <div className="filters">
             <button
               type="button"
-              className={`filter ${
-                activeFilter === "all" ? "active" : ""
-              }`}
+              className={`filter ${activeFilter === "all" ? "active" : ""}`}
               onClick={() => setActiveFilter("all")}
               aria-pressed={activeFilter === "all"}
             >
@@ -558,9 +644,7 @@ function App() {
 
             <button
               type="button"
-              className={`filter ${
-                activeFilter === "pending" ? "active" : ""
-              }`}
+              className={`filter ${activeFilter === "pending" ? "active" : ""}`}
               onClick={() => setActiveFilter("pending")}
               aria-pressed={activeFilter === "pending"}
             >
@@ -582,16 +666,10 @@ function App() {
           {/* Task cards */}
           <div className="task-list">
             {filteredTasks.length === 0 ? (
-              <p className="empty-state">
-                {getEmptyMessage()}
-              </p>
+              <p className="empty-state">{getEmptyMessage()}</p>
             ) : (
               filteredTasks.map((task) => (
-                <div
-                  className="task-item"
-                  key={task.id}
-                >
-
+                <div className="task-item" key={task.id}>
                   {/* Completion checkbox */}
                   <button
                     type="button"
@@ -625,9 +703,7 @@ function App() {
                         <button
                           type="button"
                           className="save-edit-button"
-                          onClick={() =>
-                            handleSaveEdit(task.id)
-                          }
+                          onClick={() => handleSaveEdit(task.id)}
                         >
                           Save
                         </button>
@@ -642,13 +718,7 @@ function App() {
                       </div>
                     ) : (
                       <>
-                        <p
-                          className={
-                            task.completed
-                              ? "completed-text"
-                              : ""
-                          }
-                        >
+                        <p className={task.completed ? "completed-text" : ""}>
                           {task.title}
                         </p>
 
@@ -658,9 +728,7 @@ function App() {
                   </div>
 
                   {/* Priority */}
-                  <span
-                    className={`priority ${task.priority.toLowerCase()}`}
-                  >
+                  <span className={`priority ${task.priority.toLowerCase()}`}>
                     {task.priority}
                   </span>
 
@@ -670,9 +738,7 @@ function App() {
                       <button
                         type="button"
                         className="edit-button"
-                        onClick={() =>
-                          handleStartEdit(task)
-                        }
+                        onClick={() => handleStartEdit(task)}
                         aria-label={`Edit ${task.title}`}
                       >
                         Edit
@@ -681,9 +747,7 @@ function App() {
                       <button
                         type="button"
                         className="delete-button"
-                        onClick={() =>
-                          handleDeleteTask(task.id)
-                        }
+                        onClick={() => handleDeleteTask(task.id)}
                         aria-label={`Delete ${task.title}`}
                       >
                         Delete
@@ -698,13 +762,10 @@ function App() {
 
         {/* Footer */}
         <footer className="footer">
-          <p>
-            A little progress every day adds up.
-          </p>
+          <p>A little progress every day adds up.</p>
 
           <span>Made with focus by VoxTask</span>
         </footer>
-
       </main>
     </div>
   );
