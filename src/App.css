@@ -227,7 +227,6 @@
   font-size: 12px;
 }
 
-
 .filters {
   display: flex;
   gap: 26px;
@@ -244,7 +243,9 @@
   font-size: 12px;
   color: #9690a0;
   cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .filter:hover {
@@ -584,14 +585,14 @@
   outline-offset: 3px;
 }
 
-
-
 /* Interactive microphone button */
 .mic-button {
   border: none;
   cursor: pointer;
   font-family: inherit;
-  transition: transform 0.2s ease, box-shadow 0.2s ease,
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
     background 0.2s ease;
 }
 
@@ -616,4 +617,379 @@
   color: #7855dc;
   font-size: 12px;
   line-height: 1.6;
+}
+
+/* =====================================
+   VOXTASK - AURORA GLASS THEME
+===================================== */
+
+/* 1. Main Aurora Background */
+
+.app {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  color: #302b46;
+  background: linear-gradient(135deg, #f5f0ff 0%, #edf3ff 45%, #fff0f7 100%);
+}
+
+.app::before,
+.app::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  filter: blur(65px);
+  opacity: 0.55;
+}
+
+.app::before {
+  top: -150px;
+  left: -130px;
+  background: #cbb8ff;
+}
+
+.app::after {
+  right: -130px;
+  bottom: -150px;
+  background: #f3c5e7;
+}
+
+/* 2. Navigation Bar */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: 76px;
+  padding: 0 8%;
+  background: rgba(255, 255, 255, 0.58);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 5px 25px rgba(95, 76, 145, 0.06);
+}
+
+.brand h2 {
+  color: #493773;
+  font-weight: 750;
+  letter-spacing: -1px;
+}
+
+.profile {
+  color: #74688b;
+}
+
+/* 3. Main Content */
+
+.container {
+  max-width: 960px;
+  padding-top: 65px;
+}
+
+.welcome h1 {
+  color: #352a51;
+  font-weight: 750;
+  letter-spacing: -1.5px;
+}
+
+.subtitle {
+  color: #81758f;
+}
+
+.eyebrow {
+  color: #8263c8;
+}
+
+/* 4. Fresh Start Label */
+
+.date-label {
+  background: rgba(255, 255, 255, 0.52);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 5px 20px rgba(101, 77, 160, 0.07);
+  color: #7559af;
+}
+
+/* 5. Voice Assistant Glass Card */
+
+.voice-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.78),
+    rgba(239, 232, 255, 0.52),
+    rgba(227, 240, 255, 0.65)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 22px;
+  padding: 34px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow:
+    0 18px 45px rgba(104, 83, 157, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.voice-content h2 {
+  color: #453466;
+  font-size: 23px;
+}
+
+.voice-content > p:last-child {
+  color: #81758f;
+}
+
+/* 6. Glass Microphone */
+
+.mic-button {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  color: white;
+  background: linear-gradient(145deg, #a78bfa, #8059d8, #6e65ce);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  box-shadow:
+    0 8px 24px rgba(124, 91, 205, 0.3),
+    inset 0 1px 3px rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+.mic-button:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 12px 30px rgba(124, 91, 205, 0.35);
+}
+
+.mic-button.listening {
+  background: linear-gradient(145deg, #d68dc4, #9a69d8);
+  box-shadow:
+    0 0 0 7px rgba(183, 145, 229, 0.16),
+    0 10px 30px rgba(145, 92, 191, 0.3);
+}
+
+/* 7. Manual Task Input - Glass Style */
+
+.add-task {
+  height: 62px;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 15px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 10px 30px rgba(101, 81, 150, 0.07),
+    inset 0 1px 0 white;
+}
+
+.task-input {
+  color: #39314e;
+}
+
+.task-input::placeholder {
+  color: #a49ab6;
+}
+
+/* 8. Add Task Button */
+
+.add-button {
+  background: linear-gradient(135deg, #9577e5, #7555cf);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 9px;
+  font-weight: 600;
+  box-shadow: 0 5px 14px rgba(117, 85, 207, 0.2);
+  transition: all 0.2s ease;
+}
+
+.add-button:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #8666da, #6847c2);
+}
+
+/* 9. Task Section */
+
+.section-heading h2 {
+  color: #44345f;
+}
+
+.section-heading p {
+  color: #9386a5;
+}
+
+.task-count {
+  color: #7863a4;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  padding: 7px 13px;
+}
+
+/* 10. Task Filters */
+
+.filters {
+  border-bottom: 1px solid rgba(143, 120, 184, 0.16);
+}
+
+.filter {
+  color: #9689a8;
+  border-bottom-color: transparent;
+}
+
+.filter:hover {
+  color: #7455c4;
+}
+
+.filter.active {
+  color: #7654cb;
+  border-bottom-color: #8969dc;
+}
+
+/* 11. Glass Task Cards */
+
+.task-item {
+  min-height: 76px;
+  background: rgba(255, 255, 255, 0.61);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 15px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    0 8px 23px rgba(98, 77, 145, 0.065),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.task-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(98, 77, 145, 0.11);
+}
+
+.task-details p {
+  color: #403553;
+}
+
+.task-details span {
+  color: #998ca9;
+}
+
+/* 12. Task Checkbox */
+
+.task-checkbox:not(.checked) {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1.5px solid #c9b9e4;
+}
+
+.task-checkbox.checked {
+  background: linear-gradient(135deg, #a389ed, #795bd1);
+  border-color: #8a6bd8;
+  box-shadow: 0 3px 9px rgba(121, 91, 209, 0.2);
+}
+
+/* 13. Edit and Delete Buttons */
+
+.edit-button {
+  background: rgba(226, 215, 255, 0.7);
+  color: #7653c6;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.edit-button:hover {
+  background: #e1d5ff;
+}
+
+.delete-button {
+  background: rgba(255, 230, 237, 0.72);
+  color: #c26683;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+}
+
+.delete-button:hover {
+  background: #ffdae6;
+}
+
+/* 14. Empty State */
+
+.empty-state {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px dashed rgba(148, 121, 192, 0.4);
+  border-radius: 16px;
+  color: #867a9a;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+/* 15. Footer */
+
+.footer {
+  border-top: 1px solid rgba(143, 120, 184, 0.15);
+  color: #9386a5;
+}
+
+/* 16. Voice Feedback */
+
+.voice-message {
+  color: #7654c8;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+/* 17. Edit Input */
+
+.edit-task-input {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: #d9c9f5;
+}
+
+/* 18. Responsive Design */
+
+@media (max-width: 600px) {
+  .topbar {
+    background: rgba(255, 255, 255, 0.74);
+    padding: 0 20px;
+  }
+
+  .welcome h1 {
+    font-size: 27px;
+  }
+
+  .voice-card {
+    padding: 24px 19px;
+    border-radius: 18px;
+  }
+
+  .mic-button {
+    width: 62px;
+    height: 62px;
+  }
+
+  .task-item {
+    background: rgba(255, 255, 255, 0.76);
+  }
+}
+
+/* 19. Reduced Motion Accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  .task-item,
+  .mic-button,
+  .add-button {
+    transition: none;
+  }
+
+  .task-item:hover,
+  .mic-button:hover,
+  .add-button:hover {
+    transform: none;
+  }
 }
